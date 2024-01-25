@@ -1,0 +1,23 @@
+---
+name: reader
+display_name: Reader
+description: "Processes and interprets input data for further analysis or action."
+sub_category: "Data Processing"
+category: Input
+properties:
+  - name: document_type
+    type: str
+    default_value: text  # could be image, text, audio, video
+interfaces:
+  - name: load_document
+    in:
+      - name: document_location
+        type: str
+        source: USER_INPUT.DOCUMENT_LOCATION
+    out:
+      - name: doc
+        type: list[str]
+      - name: document_name
+        type: str
+      - name: document_type
+        type: str

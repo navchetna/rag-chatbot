@@ -1,0 +1,39 @@
+---
+name: vector_database
+display_name: Vector Database
+description: Store data using vectorized representations, suitable for factual databases.
+sub_category: Database Management
+category: Factual DBs
+properties:
+  - name: name
+    type: str
+    default_value: faiss
+interfaces:
+  - name: insert_embeddings
+    in:
+      - name: embedding_list
+        type: list[embedding]
+        source: embedder
+      - name: chunk_list
+        type: list[chunk]
+        source: embedder
+      - name: document_name
+        type: str
+        source: embedder
+      - name: document_type
+        type: str
+        source: embedder
+    out:
+      - name: result
+        type: bool
+  - name: search_query
+    in:
+      - name: embedding_vector
+        type: embedding
+        source: embedder
+      - name: chunk_count
+        type: int
+        source: USER_INPUT.CHUNK_COUNT
+    out:
+      - name: chunk_list
+        type: list[chunk]

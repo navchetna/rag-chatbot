@@ -1,0 +1,35 @@
+---
+name: adapter
+display_name: Chunk Adapter
+description: "Preprocess and structure input data."
+sub_category: "Data Preprocessing"
+category: Input Adapters
+properties:
+  - name: chunk_size
+    type: int
+    default_value: 500
+  - name: chunk_overlap
+    type: int
+    default_value: 10
+  - name: seperator
+    type: str
+    default_value: \n\n
+interfaces:
+  - name: get_chunks
+    in:
+      - name: doc
+        type: list[str]
+        source: reader
+      - name: document_name
+        type: str
+        source: reader
+      - name: document_type
+        type: str
+        source: reader
+    out:
+      - name: chunk_list
+        type: list[chunk]
+      - name: document_name
+        type: str
+      - name: document_type
+        type: str

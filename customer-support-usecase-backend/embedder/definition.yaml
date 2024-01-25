@@ -1,0 +1,39 @@
+---
+name: embedder
+display_name: Embedder
+description: "Converts data into numerical representations."
+sub_category: "Feature Extraction"
+category: Embedders
+properties:
+  - name: embedding_model
+    type: str
+    default_value: all-MiniLM-l6-v2
+interfaces:
+  - name: embed_chunks
+    in:
+      - name: chunk_list
+        type: list[chunk]
+        source: adapter
+      - name: document_name
+        type: str
+        source: adapter
+      - name: document_type
+        type: str
+        source: adapter
+    out:
+      - name: embedding_list
+        type: list[embedding]
+      - name: chunk_list
+        type: list[chunk]
+      - name: document_name
+        type: str
+      - name: document_type
+        type: str
+  - name: embed_query
+    in:
+      - name: query
+        type: str
+        source: USER_INPUT.QUERY
+    out:
+      - name: embedding_vector
+        type: embedding
