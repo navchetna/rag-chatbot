@@ -185,7 +185,7 @@ const ChatWindow = ({ updateMetrics, props }) => {
   const [currentContextId, setCurrentContextId] = useState(null);
   const serverUrl = import.meta.env.VITE_BACKEND_URL;
   const sessionId = import.meta.env.VITE_SESSION_ID;
-  const max_new_tokens = import.meta.env.VITE_MAX_NEW_TOKENS;
+  const max_new_tokens = parseInt(import.meta.env.VITE_MAX_NEW_TOKENS);
   const getAllMessages = () =>
     (data == undefined) | (data == null) | (currentContextId == null)
       ? []
