@@ -3,36 +3,51 @@ version: '2'
 services:
   backend:
     build:
-      context: ./customer_support_usecase_backend
-    container_name: customer_support_usecase_backend
-    image: customer_support_usecase_backend
-    volumes: [vector_db:/vector_db]
-    ports: 8000:8000
+      context: ./customer-support-usecase-backend
+    container_name: customer-support-usecase-backend
+    image: customer-support-usecase-backend
+    volumes: [/home/dell/chatbot-data/vector_db:/vector_db]
+    ports: 
+      - 8000:8000
+    depends_on:
+      - tgi
+      - database
     environment:
       - MONGO_URL=mongodb://database:27017/
-      - INFERENCE_URL=http://tgi:8080
+      - INFERENCE_URL=http://tgi:80
       - VECTOR_DB_LOCATION=/vector_db/faiss_database
       - DATABASE_TYPE=test
-      - CHUNK_SIZE=250
+      - CHUNK_SIZE=350
       - CHUNK_OVERLAP=10
       - CHUNK_COUNT=2
   frontend:
     build:
-      context: ./customer_support_usecase_frontend
-    container_name: customer_support_usecase_frontend
-    image: customer_support_usecase_frontend
-    ports: 3000:5173
+      context: ./customer-support-usecase-frontend
+    container_name: customer-support-usecase-frontend
+    image: customer-support-usecase-frontend
+    ports: 
+      - 3000:5173
+    depends_on:
+      - tgi
+      - database
+      - backend
     environment:
-      - VITE_BACKEND_URL=http://insert_backend_url:8000
+      - VITE_BACKEND_URL=http://172.16.11.130:8000
       - VITE_SESSION_ID=656f20b414828b118cef987b
-      - VITE_SSE_URL=http://tgi:8080
-      - VITE_MAX_NEW_TOKENS=500
+      - VITE_SSE_URL=http://172.16.11.130:8080
+      - VITE_MAX_NEW_TOKENS=300
   tgi:
-    container_name: tgi-llama-2-7b-chat
-    image: ghcr.io/huggingface/text-generation-inference:1.3
-    command: [--model-id, meta-llama/Llama-2-7b-chat-hf]
-    volumes: [/home/akarx/text2sql-codebase/chatbot/models:/app/models]
+    container_name: tgi-llama-2
+    image: ghcr.io/huggingface/text-generation-inference:1.2
+    command: ["--model-id", "meta-llama/Llama-2-7b-chat-hf", "--max-input-length", "2048", "--max-total-tokens", "4096"]
+    volumes: [/home/dell/.cache/huggingface/hub:/data]
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=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
+    cpuset: "0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82,84,86,88,90,92,94,96,98,100,102,104,106,108,110,112,114,116,118,120,122,124,126"
+    shm_size: 30g
+    ports:
+      - "8080:80"
   database:
     image: mongo
     container_name: mongodb
-    volumes: [mongo-volume:/data/db]
+    volumes: [/home/dell/chatbot-data/mongodb:/data/db]
