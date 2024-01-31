@@ -18,6 +18,10 @@ def construct_conversation_summary_prompt(messages: list[dict]):
 
 
 def add_context_to_prompt(LLAMA2_CHATBOT_PROMPT, contexts, query_str):
+
+    """
+    dynamically adds as many contexts as possible to the prompt for better responses.
+    """
     
     # Input sequence length for Llama-2-7b-Chat
     MAX_INPUT_LENGTH = 4096
@@ -67,8 +71,8 @@ def construct_chatbot_prompt(messages: list[dict], contexts: list[str], query: s
 
     LLAMA2_CHATBOT_FINAL_PROMPT = add_context_to_prompt(LLAMA2_CHATBOT_PROMPT, contexts, query_str)
 
-    print(LLAMA2_CHATBOT_PROMPT)
-    token_count = (4 * len(LLAMA2_CHATBOT_PROMPT.split(" "))) / 3
+    print("New dynamic prompt: ", LLAMA2_CHATBOT_FINAL_PROMPT)
+    token_count = (4 * len(LLAMA2_CHATBOT_FINAL_PROMPT.split(" "))) / 3
     print(f"Token count : {token_count}")
     print(f"Number of messages: {last_k_value}")
-    return LLAMA2_CHATBOT_PROMPT
+    return LLAMA2_CHATBOT_FINAL_PROMPT
