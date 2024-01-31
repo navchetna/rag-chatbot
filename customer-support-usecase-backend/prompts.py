@@ -17,6 +17,26 @@ def construct_conversation_summary_prompt(messages: list[dict]):
     return prompt
 
 
+def add_context_to_prompt(LLAMA2_CHATBOT_PROMPT, contexts, query_str):
+    
+    # Input sequence length for Llama-2-7b-Chat
+    MAX_INPUT_LENGTH = 4096
+
+    LLAMA2_CHATBOT_PROMPT = f"<s>[INST] <<SYS>>\n You are a helpful, respectful and honest assistant. Always answer as helpfully as possible. \n If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n <</SYS>>\n\n <s>[INST] Context information is below. \n --------------------- \n\n --------------------- \n Given the context information, previous conversation and no prior knowledge, answer the query. Do not repeat the entire query. Do not thank me for providing the context. Keep your answers concise. If the query asked cannot be answered by the context, Simply refuse to answer the question.  \n Query: {query_str} \n [/INST]"
+    
+    context_str = ""
+
+    for context in contexts:
+
+        if len(LLAMA2_CHATBOT_PROMPT) + len(context_str) + len(context) <= MAX_INPUT_LENGTH:
+            context_str += context
+            context_str += "\n"
+    
+    LLAMA2_CHATBOT_FINAL_PROMPT = f"<s>[INST] <<SYS>>\n You are a helpful, respectful and honest assistant. Always answer as helpfully as possible. \n If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n <</SYS>>\n\n <s>[INST] Context information is below. \n --------------------- \n {context_str} \n --------------------- \n Given the context information, previous conversation and no prior knowledge, answer the query. Do not repeat the entire query. Do not thank me for providing the context. Keep your answers concise. If the query asked cannot be answered by the context, Simply refuse to answer the question.  \n Query: {query_str} \n [/INST]"
+
+    return LLAMA2_CHATBOT_FINAL_PROMPT
+        
+
 def construct_chatbot_prompt(messages: list[dict], contexts: list[str], query: str):
     """Constructs the chatbot prompt from the given messages and and question"""
 
@@ -40,10 +60,13 @@ def construct_chatbot_prompt(messages: list[dict], contexts: list[str], query: s
                 message=message["content"]
             )
 
-    QA_MESSAGE_PROMPT = "<s>[INST] Context information is below. \n --------------------- \n {context_str} \n --------------------- \n Given the context information, previous conversation and no prior knowledge, answer the query. Do not repeat the entire query. Do not thank me for providing the context. Keep your answers concise . If the query asked cannot be answered by the context, Simply refuse to answer the question.  \n Query: {query_str} \n [/INST]"
-    LLAMA2_CHATBOT_PROMPT += QA_MESSAGE_PROMPT.format(
-        context_str=context_str, query_str=query
-    )
+    # QA_MESSAGE_PROMPT = "<s>[INST] Context information is below. \n --------------------- \n {context_str} \n --------------------- \n Given the context information, previous conversation and no prior knowledge, answer the query. Do not repeat the entire query. Do not thank me for providing the context. Keep your answers concise. If the query asked cannot be answered by the context, Simply refuse to answer the question.  \n Query: {query_str} \n [/INST]"
+    # LLAMA2_CHATBOT_PROMPT += QA_MESSAGE_PROMPT.format(
+    #     context_str=context_str, query_str=query
+    # )
+
+    LLAMA2_CHATBOT_FINAL_PROMPT = add_context_to_prompt(LLAMA2_CHATBOT_PROMPT, contexts, query_str)
+
     print(LLAMA2_CHATBOT_PROMPT)
     token_count = (4 * len(LLAMA2_CHATBOT_PROMPT.split(" "))) / 3
     print(f"Token count : {token_count}")

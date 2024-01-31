@@ -19,7 +19,7 @@ services:
       - DATABASE_TYPE=test
       - CHUNK_SIZE=350
       - CHUNK_OVERLAP=10
-      - CHUNK_COUNT=2
+      - CHUNK_COUNT=5
   frontend:
     build:
       context: ./customer-support-usecase-frontend
