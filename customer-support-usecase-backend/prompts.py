@@ -35,6 +35,8 @@ def add_context_to_prompt(LLAMA2_CHATBOT_PROMPT, contexts, query_str):
         if len(LLAMA2_CHATBOT_PROMPT) + len(context_str) + len(context) <= MAX_INPUT_LENGTH:
             context_str += context
             context_str += "\n"
+        else:
+            break
     
     LLAMA2_CHATBOT_FINAL_PROMPT = f"<s>[INST] <<SYS>>\n You are a helpful, respectful and honest assistant. Always answer as helpfully as possible. \n If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n <</SYS>>\n\n <s>[INST] Context information is below. \n --------------------- \n {context_str} \n --------------------- \n Given the context information, previous conversation and no prior knowledge, answer the query. Do not repeat the entire query. Do not thank me for providing the context. Keep your answers concise. If the query asked cannot be answered by the context, Simply refuse to answer the question.  \n Query: {query_str} \n [/INST]"
 
