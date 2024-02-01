@@ -1,3 +1,19 @@
+# Reading or parsing a PDF 
+
+from reader.reader_akshit import Reader 
+
+pdf_reader = Reader("customer-support-usecase-backend\sample_PDFs\intel_quaterly_reports.pdf")
+pdf_reader.extract_tables()
+
+
+
+
+
+
+
+
+
+
 # Testing Adapter 
 import numpy as np 
 import requests
