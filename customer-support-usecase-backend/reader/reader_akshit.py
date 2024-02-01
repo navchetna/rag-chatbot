@@ -88,7 +88,7 @@
 
         
 
-import tabula 
+import tabula
 import PyPDF2 
 from tabulate import tabulate 
 import fitz 
@@ -118,7 +118,8 @@ class Reader:
         return self.texts 
     
     def extract_tables(self) -> List[str]: 
-        dfs = tabula.read_pdf(self.filepath, pages = "all")
+        dfs = tabula.io.read_pdf(self.filepath, pages = "all")
+        print(dfs[0])
         print(dfs[0].to_html())
 
 
