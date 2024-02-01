@@ -99,15 +99,15 @@ from pdf2docx import Converter
 
 
 class Reader:
-    def __init__(self, file_path: str, start_page: int, end_page: int, verbose: bool = True): 
+    def __init__(self, file_path: str, end_page: int, start_page: int = 1,  verbose: bool = True): 
         self.verboseprint = print if verbose else lambda *a: None 
         self.filepath = file_path 
         self.start_page = start_page 
-        self.end_page = end_page
         self.texts = []
         self.tables = []
 
         self.parsed_pdf = PyPDF2.PdfReader(self.filepath)
+        self.end_page = len(self.parsed_pdf.pages)
 
 
     def extract_text(self) -> List[str]:
