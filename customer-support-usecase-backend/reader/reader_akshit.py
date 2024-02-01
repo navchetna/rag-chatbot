@@ -99,7 +99,7 @@ from pdf2docx import Converter
 
 
 class Reader:
-    def __init__(self, file_path: str, end_page: int, start_page: int = 1,  verbose: bool = True): 
+    def __init__(self, file_path: str, end_page: int = None, start_page: int = 1,  verbose: bool = True): 
         self.verboseprint = print if verbose else lambda *a: None 
         self.filepath = file_path 
         self.start_page = start_page 
