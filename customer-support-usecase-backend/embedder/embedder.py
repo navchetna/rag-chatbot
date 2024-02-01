@@ -35,7 +35,7 @@ class Embedder:
         return sentence_embeddings
 
     def encode_query(self, query: str):
-        encoded_query = self.tokenizer([query], padding = True, truncation = True, return_tensors = "pt")
+        encoded_query = self.tokenizer([query], padding = True, truncation = True, return_tensors = "pt", add_special_tokens=True)
         query_embeddings = self._generate_embeddings(encoded_query)
         return query_embeddings.tolist()[0]
     
