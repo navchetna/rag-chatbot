@@ -6,14 +6,6 @@ pdf_reader = Reader("sample_PDFs/intel_quaterly_reports.pdf")
 pdf_reader.extract_tables()
 
 
-
-
-
-
-
-
-
-
 # Testing Adapter 
 import numpy as np 
 import requests
