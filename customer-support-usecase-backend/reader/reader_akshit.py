@@ -1,10 +1,10 @@
-import os
-import json
-import pandas as pd
-from docx import Document
-import fitz  # PyMuPDF
-from unstructured.partition.pdf import partition_pdf
-from unstructured.staging.base import elements_to_json
+# import os
+# import json
+# import pandas as pd
+# from docx import Document
+# import fitz  # PyMuPDF
+# from unstructured.partition.pdf import partition_pdf
+# from unstructured.staging.base import elements_to_json
 
 # Import other necessary libraries for different document types
 
