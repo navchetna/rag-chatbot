@@ -6,6 +6,8 @@ llm = LLM()
 
 embedder = Embedder()
 
+vector_db = VectorDB(path = 'vector_database/data', collection_name = "Dell")
+
 
 while True: 
 
@@ -13,10 +15,10 @@ while True:
     QUERY = input("Ask question to the bot! -  ")
     query_embedding = embedder.encode_query(QUERY)
 
-    vector_db = VectorDB(path = 'vector_database/data', collection_name = "Dell")
     top_k = vector_db.query_embeddings(query_embedding)
     top_chunks_list = [point.payload['text'] for point in top_k]
-    print(f"Top chunks are \n\n {top_chunks_list}")
+    top_chunks_string = '\n'.join(top_chunks_list)
+    print(f"Top chunks are: {top_chunks_string}")
 
     answer_to_query = llm.generate_answer(QUERY, top_chunks_list)
-    print(answer_to_query)
+    print(f"\n\nANSWER TO THE QUERY : {answer_to_query}")
