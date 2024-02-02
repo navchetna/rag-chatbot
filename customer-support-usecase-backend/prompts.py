@@ -30,7 +30,7 @@ def add_context_to_prompt(LLAMA2_CHATBOT_PROMPT: str, contexts, query_str: str):
 
     for context in contexts:
 
-        if (4 * len(LLAMA2_CHATBOT_PROMPT.split(" ")) + len(context_str.split(" ")) + len(context.split(" ")) / 3) <= MAX_INPUT_TOKENS:
+        if (4 * (len(LLAMA2_CHATBOT_PROMPT.split(" ")) + len(context_str.split(" ")) + len(context.split(" "))) / 3) <= MAX_INPUT_TOKENS:
             context_str += context
             context_str += "\n"
         else:
