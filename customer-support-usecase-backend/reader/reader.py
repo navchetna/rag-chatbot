@@ -1,10 +1,6 @@
-import tabula
-import PyPDF2 
-from tabulate import tabulate 
-import fitz 
-import io 
-from typing import List 
-from pdf2docx import Converter 
+import tabula 
+import PyPDF2  
+from typing import List  
 
 
 
