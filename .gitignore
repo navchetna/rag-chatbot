@@ -1,2 +1,3 @@
 volumes
 docker-compose-prod.yaml
+customer-support-usecase-backend/vector_database/data
