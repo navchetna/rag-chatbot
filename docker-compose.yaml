@@ -1,17 +1,20 @@
 ---
-version: '2'
+version: "2"
 services:
   backend:
     build:
       context: ./customer-support-usecase-backend
     container_name: customer-support-usecase-backend
     image: customer-support-usecase-backend
-    volumes: [/home/akarx/customer_support_usecase/volumes/vectordb:/vector_db]
-    ports: 
+    volumes:
+      - /home/akarx/customer_support_usecase/volumes/vectordb:/vector_db
+      - /models:/root/.cache/huggingface/hub
+    ports:
       - 5002:8000
     depends_on:
       - tgi
       - database
+    cpuset: "0-55,112-167"
     environment:
       - MONGO_URL=mongodb://database:27017/
       - INFERENCE_URL=http://tgi:80
@@ -25,7 +28,7 @@ services:
       context: ./customer-support-usecase-frontend
     container_name: customer-support-usecase-frontend
     image: customer-support-usecase-frontend
-    ports: 
+    ports:
       - 5001:5173
     depends_on:
       - tgi
@@ -39,7 +42,15 @@ services:
   tgi:
     container_name: tgi-llama-2
     image: ghcr.io/huggingface/text-generation-inference:1.2
-    command: ["--model-id", "meta-llama/Llama-2-7b-chat-hf", "--max-input-length", "2048", "--max-total-tokens", "4096"]
+    command:
+      [
+        "--model-id",
+        "meta-llama/Llama-2-7b-chat-hf",
+        "--max-input-length",
+        "2048",
+        "--max-total-tokens",
+        "4096",
+      ]
     volumes: [/home/akarx/.cache/huggingface/hub:/data]
     environment:
       - HUGGING_FACE_HUB_TOKEN=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
