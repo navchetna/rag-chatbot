@@ -4,28 +4,30 @@ from fastapi import FastAPI, HTTPException, UploadFile
 from pymongo import MongoClient
 from starlette.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from bson import ObjectId
-from vector_database.vector_database import vector_database
-from adapter.adapter import adapter
-from embedder.embedder import embedder
-from reader.reader import reader
+from vector_database.vector_database import VectorDB
+from adapter.adapter import Adapter
+from embedder.embedder import Embedder
+from reader.reader import Reader
 from flows import ingestion_flow
 from prompts import construct_chatbot_prompt, construct_conversation_summary_prompt
 from extras.database import session
 
 app = FastAPI()
 
-origins = ["*"]
+origins = ["http://localhost:4001", "http://localhost:4002", "*"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
-load_dotenv()
+# load_dotenv()
 
 INFERENCE_URL = os.getenv("INFERENCE_URL")
 MONGO_URL = os.getenv("MONGO_URL")
@@ -43,12 +45,12 @@ message_collection = db["messages"]
 context_collection = db["contexts"]
 
 # initialising components
-vector_database_obj = vector_database(name="faiss", db_location=VECTOR_DB_LOCATION)
-embedder_obj = embedder(embedding_model="all-MiniLM-L6-v2")
-adapter_obj = adapter(
-    chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP, seperator="\n\n"
-)
-reader_obj = reader()
+vector_database_obj = VectorDB()
+# embedder_obj = Embedder()
+# adapter_obj = Adapter(
+#     chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP, separator="\n\n"
+# )
+# reader_obj = Reader()
 
 
 class SummaryResponse(BaseModel):
@@ -236,24 +238,29 @@ async def update_context(document: UploadFile, context_id: str):
             temp_file.write(contents)
 
         metadata = {"context_id": context_id, "document_name": document_name}
-        document_ids, err = ingestion_flow(
-            "/tmp/temp.pdf",
-            metadata,
-            reader_obj,
-            adapter_obj,
-            embedder_obj,
-            vector_database_obj,
-        )
+        # document_ids, err = ingestion_flow(
+        #     "/tmp/temp.pdf",
+        #     metadata,
+        #     reader_obj,
+        #     adapter_obj,
+        #     embedder_obj,
+        #     vector_database_obj,
+        # )
+        err = ingestion_flow("/tmp/temp.pdf", context_id)
+        document_ids = []
         if not err:
             # Updating the mongodb Record for contexts
             context_document["documents"].append(
-                {"name": document_name, "vector_database_ids": document_ids}
+                {
+                    "name": document_name, 
+                    "vector_database_ids": document_ids
+                }
             )
             all_documents = context_document["documents"]
             filter = {"_id": ObjectId(context_id)}
             update_data = {"$set": {"documents": all_documents}}
             context_collection.update_one(filter, update_data)
-            vector_database_obj.save_database_to_disk()
+            # vector_database_obj.save_database_to_disk()
         else:
             raise HTTPException(status_code=500, detail=err)
     else:
@@ -449,10 +456,22 @@ def update_message(message_id: str, feedback: int):
 
 @app.get("/prompts/chatbot")
 def get_chatbot_prompt(context_id: str, session_id: str, query: str):
-    query_embedding_vector = embedder_obj.embed_query(query)
-    contexts: list[str] = vector_database_obj.search_query(
-        query_embedding_vector, CHUNK_COUNT, {"context_id": context_id}
-    )
+    # query_embedding_vector = embedder_obj.embed_query(query)
+    # contexts: list[str] = vector_database_obj.search_query(
+    #     query_embedding_vector, CHUNK_COUNT, {"context_id": context_id}
+    # )
+    from vector_database.vector_database import VectorDB 
+    from embedder.embedder import Embedder
+
+    vector_db = VectorDB(path = os.getenv("VECTOR_DB_LOCATION"), collection_name = context_id)
+    embedder = Embedder()
+    
+    query_embedding = embedder.encode_query(query)
+    top_k = vector_db.query_embeddings(query_embedding)
+    top_chunks_list = [point.payload['text'] for point in top_k]
+    top_chunks_string = '\n'.join(top_chunks_list)
+    print(f"Top chunks are: {top_chunks_string}")
+
     session_document = session_collection.find_one({"_id": ObjectId(session_id)})
     if session_document:
         messages = list(
@@ -461,7 +480,7 @@ def get_chatbot_prompt(context_id: str, session_id: str, query: str):
             ).sort("sequence_number", 1)
         )
 
-        prompt_str = construct_chatbot_prompt(messages, contexts, query)
+        prompt_str = construct_chatbot_prompt(messages, top_chunks_list, query)
         prompt = {"prompt": prompt_str}
         return prompt
     else:

@@ -1,66 +1,29 @@
-import os
-import json
-
-from langchain.document_loaders import (
-    CSVLoader,
-    EverNoteLoader,
-    PyMuPDFLoader,
-    TextLoader,
-    UnstructuredEmailLoader,
-    UnstructuredEPubLoader,
-    UnstructuredHTMLLoader,
-    UnstructuredMarkdownLoader,
-    UnstructuredODTLoader,
-    UnstructuredPowerPointLoader,
-    UnstructuredWordDocumentLoader,
-)
+import tabula 
+import PyPDF2  
+from typing import List  
 
 
-class reader:
-    def __init__(self, document_type: str = "text", verbose: bool = True):
-        self.verboseprint = print if verbose else lambda *a: None
 
-        self.document_type = document_type
-        self.current_directory = os.getcwd()
+class Reader:
+    def __init__(self, file_path: str, end_page: int = None, start_page: int = 1,  verbose: bool = True): 
+        self.verboseprint = print if verbose else lambda *a: None 
+        self.filepath = file_path 
+        self.start_page = start_page 
+        self.texts = []
+        self.tables = []
 
-        self.LOADER_MAPPING = {
-            ".csv": (CSVLoader, {}),
-            # ".docx": (Docx2txtLoader, {}),
-            ".doc": (UnstructuredWordDocumentLoader, {}),
-            ".docx": (UnstructuredWordDocumentLoader, {}),
-            ".enex": (EverNoteLoader, {}),
-            ".epub": (UnstructuredEPubLoader, {}),
-            ".html": (UnstructuredHTMLLoader, {}),
-            ".md": (UnstructuredMarkdownLoader, {}),
-            ".odt": (UnstructuredODTLoader, {}),
-            ".pdf": (PyMuPDFLoader, {}),
-            ".ppt": (UnstructuredPowerPointLoader, {}),
-            ".pptx": (UnstructuredPowerPointLoader, {}),
-            ".txt": (TextLoader, {"encoding": "utf8"}),
-            # Add more mappings for other file extensions and loaders as needed
-        }
-        self.verboseprint("READER: Reader initialised successfully")
+        self.parsed_pdf = PyPDF2.PdfReader(self.filepath)
+        self.end_page = len(self.parsed_pdf.pages)
 
-    def load_document(self, document_location: str) -> dict:
-        """Loads the file into one or multiple langchain Documents"""
 
-        ext = "." + document_location.rsplit(".", 1)[-1]
-        if ext in self.LOADER_MAPPING:
-            loader_class, loader_args = self.LOADER_MAPPING[ext]
-            loader = loader_class(document_location, **loader_args)
-            documents = loader.load()
-            self.verboseprint(f"READER: {document_location} Loaded successfully.")
-
-            doc = []
-            document_name = ""
-            document_type = ext
-
-            for document in documents:
-                doc.append(document.page_content)
-                document_name = document.metadata["source"]
-
-            return_obj = (doc, document_name, document_type)
-            return return_obj
-
-        else:
-            raise ValueError(f"Unsupported file extension '{ext}'")
+    def extract_text(self) -> List[str]:
+        for page_number in range(self.start_page -1 , min(self.end_page, len(self.parsed_pdf.pages))):
+            pageObj = self.parsed_pdf.pages[page_number] 
+            text = pageObj.extract_text() 
+            self.texts.append(text)
+        return self.texts 
+    
+    def extract_tables(self) -> List[str]: 
+        dfs = tabula.io.read_pdf(self.filepath, pages = "all")
+        tables_html = [df.to_html() for df in dfs]
+        return dfs, tables_html 

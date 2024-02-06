@@ -1,19 +1,18 @@
-FROM python:3.9.13
+FROM python:3.9-slim
+COPY --from=openjdk:8-jre-slim /usr/local/openjdk-8 /usr/local/openjdk-8
 
+ENV JAVA_HOME /usr/local/openjdk-8
+
+RUN update-alternatives --install /usr/bin/java java /usr/local/openjdk-8/bin/java 1
 
 WORKDIR /app
 
 COPY requirements.txt /app/
 
-COPY extras/docker/build.sh /app
-
-COPY extras/docker/run.sh /app
-
-
-RUN bash build.sh
+RUN pip install -r requirements.txt
 
 COPY ./ /app/
 
 EXPOSE 8000
 
-CMD ["bash","run.sh"]
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
