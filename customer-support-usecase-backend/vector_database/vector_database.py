@@ -31,12 +31,28 @@ class VectorDB:
                 PointStruct(
                     id = idx,
                     vector = embeds.tolist(), 
-                    payload = {'text': text}
+                    payload = {'text': text, 'type': "text"}
                 )
                 for idx, (embeds, text) in enumerate(zip(embeddings, metadata))
             ]
         )
-        self.verboseprint(f'Embedding stored.')
+        self.verboseprint(f'Context embedding stored.')
+
+
+    def insert_table_embeddings(self, embeddings: List, metadata = None):
+        self.client.upsert(
+            collection_name = self.collection_name, 
+            points = [
+                PointStruct(
+                    id = idx,
+                    vector = embeds.tolist(), 
+                    payload = {'table': table_data[0], 'summary': table_data[1], 'type': 'table'}
+                )
+                for idx, (embeds, table_data) in enumerate(zip(embeddings, metadata))
+            ]
+        )
+        self.verboseprint(f'Table embedding embedding stored.')
+    
 
     
     def query_embeddings(self, query_embedding: List, limit: int = 4): 

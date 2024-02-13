@@ -11,7 +11,7 @@ from adapter.adapter import Adapter
 from embedder.embedder import Embedder
 from reader.reader import Reader
 from flows import ingestion_flow
-from prompts import construct_chatbot_prompt, construct_conversation_summary_prompt
+from prompts import construct_chatbot_prompt, construct_chatbot_prompt_mistral, construct_conversation_summary_prompt
 from extras.database import session
 
 app = FastAPI()
@@ -461,16 +461,17 @@ def get_chatbot_prompt(context_id: str, session_id: str, query: str):
     #     query_embedding_vector, CHUNK_COUNT, {"context_id": context_id}
     # )
     from vector_database.vector_database import VectorDB 
-    from embedder.embedder import Embedder
+    # from embedder.embedder import Embedder
+    from embedder.embedder import STEmbedder
 
     vector_db = VectorDB(path = os.getenv("VECTOR_DB_LOCATION"), collection_name = context_id)
-    embedder = Embedder()
+    embedder = STEmbedder()
     
-    query_embedding = embedder.encode_query(query)
+    query_embedding = embedder.embed_text(query)
     top_k = vector_db.query_embeddings(query_embedding)
-    top_chunks_list = [point.payload['text'] for point in top_k]
-    top_chunks_string = '\n'.join(top_chunks_list)
-    print(f"Top chunks are: {top_chunks_string}")
+    top_k_chunks = [point.payload['table'] if point.payload['type']=='table' else point.payload['text'] for point in top_k]
+    top_k_string = "\n------\n".join(top_k_chunks)
+    print(f"Top chunks are: {top_k_string}")
 
     session_document = session_collection.find_one({"_id": ObjectId(session_id)})
     if session_document:
@@ -480,7 +481,7 @@ def get_chatbot_prompt(context_id: str, session_id: str, query: str):
             ).sort("sequence_number", 1)
         )
 
-        prompt_str = construct_chatbot_prompt(messages, top_chunks_list, query)
+        prompt_str = construct_chatbot_prompt_mistral(top_k_string, query)
         prompt = {"prompt": prompt_str}
         return prompt
     else:

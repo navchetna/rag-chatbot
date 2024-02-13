@@ -16,8 +16,11 @@ class Embedder:
             f"EMBEDDER: {self.model_name} initialized successfully!"
         )
 
-    def embed_tables_summary(self, tables):
-        return None 
+    def embed_tables_summary(self, tables:List):
+        encoded_tables = self.tokenizer(tables, padding = True, truncation = True, return_tensors = "pt")
+        embeddings = self._generate_embeddings(encoded_tables)
+        self.verboseprint(f"Embeddings generated!")
+        return embeddings
 
     def embed_documents(self, documents: List[Document]): 
         "Generates the embedding from the list of Documents"
@@ -43,3 +46,12 @@ class Embedder:
         return self.tokenizer.decode(embedded_chunks)
 
 
+from sentence_transformers import SentenceTransformer
+
+class STEmbedder:
+    def __init__(self, model_name = "nomic-ai/nomic-embed-text-v1"):
+        self.model = SentenceTransformer(model_name, trust_remote_code=True)
+
+    def embed_text(self, texts: List[str]): 
+        embeddings = self.model.encode(texts)
+        return embeddings

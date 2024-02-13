@@ -76,3 +76,20 @@ def construct_chatbot_prompt(messages: list[dict], contexts: list[str], query: s
     print(f"Token count : {token_count}")
     print(f"Number of messages: {last_k_value}")
     return LLAMA2_CHATBOT_FINAL_PROMPT
+
+
+
+def construct_chatbot_prompt_mistral(contexts: str, query: str):
+    """Constructs the chatbot prompt from the given messages and and question"""
+
+    # context_str = get_context_string(contexts)
+    MISTRAL_CHATBOT_FINAL_PROMPT = f"""<s>[INST] <<SYS>>\n You are a helpful and respectiful assistant. Your task is to answer to the user query based on the context provided to you. <</SYS> 
+        [INST] Given a question from a product technical guide. Understand the question and provide its answer from the given context. The context contains both tables and text. Each context is seperated by five hyphen (-----). Tables are provided to you in markdown format. Based on the query generate the most suitable answer for the given query. 
+        Take a deep breadth and think step by step before answering the question.
+
+        Question - {query} 
+
+        Context - 
+        {contexts} [/INST]""" 
+    return MISTRAL_CHATBOT_FINAL_PROMPT
+

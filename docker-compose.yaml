@@ -20,8 +20,8 @@ services:
       - INFERENCE_URL=http://tgi:80
       - VECTOR_DB_LOCATION=/vector_db/faiss_database
       - DATABASE_TYPE=test
-      - CHUNK_SIZE=350
-      - CHUNK_OVERLAP=10
+      - CHUNK_SIZE=4000
+      - CHUNK_OVERLAP=800
       - CHUNK_COUNT=10
   frontend:
     build:
@@ -45,7 +45,7 @@ services:
     command:
       [
         "--model-id",
-        "meta-llama/Llama-2-7b-chat-hf",
+        "mistralai/Mixtral-8x7B-Instruct-v0.1",
         "--max-input-length",
         "2048",
         "--max-total-tokens",
