@@ -50,8 +50,10 @@ services:
         "2048",
         "--max-total-tokens",
         "4096",
+        "-v",
+        "/home/akarx/cache/huggingface/hub:"
       ]
-    volumes: [/home/akarx/.cache/huggingface/hub:/data]
+    volumes: [/home/akarx/.cache/huggingface/hub:/models]
     environment:
       - HUGGING_FACE_HUB_TOKEN=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
     cpuset: "0-55,112-167"
