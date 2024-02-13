@@ -66,9 +66,9 @@ def ingestion_flow(file_path: str, context_id: str):
     pdf_reader = Reader(file_path)
     texts = pdf_reader.extract_text()
 
-    toc = TOC("pdfs/dell/poweredge-r860-technical-guide.pdf")._get_toc()
+    toc = TOC(file_path)._get_toc()
 
-    pdf_reader = PDFReader("pdfs/dell/poweredge-r860-technical-guide.pdf")
+    pdf_reader = PDFReader(file_path)
 
     table_titles, tables_markdown = pdf_reader.extract_tables()
 
