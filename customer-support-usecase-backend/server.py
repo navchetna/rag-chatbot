@@ -10,8 +10,8 @@ from vector_database.vector_database import VectorDB
 from adapter.adapter import Adapter
 from embedder.embedder import Embedder
 from reader.reader import Reader
-from flows import ingestion_flow
-from prompts import construct_chatbot_prompt, construct_chatbot_prompt_mistral, construct_conversation_summary_prompt
+from flows import ingestion_flow, storing_data
+from prompts import construct_chatbot_prompt, construct_chatbot_prompt_mistral, construct_conversation_summary_prompt, construct_summary_prompt_mistral
 from extras.database import session
 
 app = FastAPI()
@@ -246,7 +246,35 @@ async def update_context(document: UploadFile, context_id: str):
         #     embedder_obj,
         #     vector_database_obj,
         # )
-        err = ingestion_flow("/tmp/temp.pdf", context_id)
+        texts, toc, table_titles, table_data = ingestion_flow("/tmp/temp.pdf", context_id)
+        summary_of_tables = []
+        for title, table in zip(table_titles,table_data):
+            complete_summary_prompt = construct_summary_prompt_mistral(toc,title+'\n'+table)
+
+            r = requests.post(
+                    f"{INFERENCE_URL}/generate",
+                    json={
+                        "inputs": complete_summary_prompt,
+                        "parameters": {
+                            "best_of": 1,
+                            "max_new_tokens": 1024,
+                            "repetition_penalty": None,
+                            "temperature": 0.5,
+                            "top_k": None,
+                            "top_p": None,
+                        },
+                    },
+                )
+            inference_endpoint_response = r.json()
+  
+            summary = inference_endpoint_response["generated_text"]
+            print(summary)
+            summary_of_tables.append(summary)
+
+        table_data = [f'{title}\n{table}' for title, table in zip(table_titles, table_data)]
+
+        err = storing_data(texts, summary_of_tables, context_id, table_data)
+
         document_ids = []
         if not err:
             # Updating the mongodb Record for contexts

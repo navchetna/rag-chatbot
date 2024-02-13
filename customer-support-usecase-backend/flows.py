@@ -54,12 +54,45 @@ import json
 
 from reader.reader import Reader, TOC 
 from reader.reader import PDFReader
-from llm.serve_llm import LLM
+# from llm.serve_llm import LLM
 import numpy as np 
 from adapter.adapter import Adapter
 from embedder.embedder import STEmbedder
 from vector_database.vector_database import VectorDB 
 
+
+
+# def ingestion_flow(file_path: str, context_id: str):
+#     pdf_reader = Reader(file_path)
+#     texts = pdf_reader.extract_text()
+
+#     toc = TOC(file_path)._get_toc()
+
+#     pdf_reader = PDFReader(file_path)
+
+#     table_titles, tables_markdown = pdf_reader.extract_tables()
+
+#     table_data = [title + "\n" + table for title, table in zip(table_titles, tables_markdown)]
+
+
+
+#     llm = LLM() 
+
+#     summary_of_tables = [llm.generate_summary_v3(toc[0][1], title+'\n'+table) for title, table in zip(table_titles, tables_markdown)]
+
+
+#     # Intializing and chunking the texts 
+#     adapter_instance = Adapter(chunk_size = 4000, chunk_overlap=800)
+#     text_docs, texts = adapter_instance.get_chunks(texts)
+
+#     embedder = STEmbedder()
+#     embedded_docs_texts = embedder.embed_text(texts)
+#     embedded_docs_table = embedder.embed_text(summary_of_tables)
+
+#     vector_db = VectorDB(path = VECTOR_DB_LOCATION, collection_name = context_id, embedding_size = 768)
+#     vector_db.insert_docs_embeddings(embedded_docs_texts, texts)
+#     metadata = [[table, summary_of_table] for table, summary_of_table in zip(table_data, summary_of_tables)]
+#     vector_db.insert_table_embeddings(embedded_docs_table, metadata)
 
 
 def ingestion_flow(file_path: str, context_id: str):
@@ -76,12 +109,20 @@ def ingestion_flow(file_path: str, context_id: str):
 
 
 
-    llm = LLM() 
+    return texts, toc[0][1], table_titles, table_data 
+
+# 
 
     summary_of_tables = [llm.generate_summary_v3(toc[0][1], title+'\n'+table) for title, table in zip(table_titles, tables_markdown)]
 
-
+def storing_data(texts, summary_of_tables, context_id, table_data):
+    """
+    table_data : Complete table data including title and table in markdown
+    summary_of_tables: Summary generated 
+    
+    """
     # Intializing and chunking the texts 
+
     adapter_instance = Adapter(chunk_size = 4000, chunk_overlap=800)
     text_docs, texts = adapter_instance.get_chunks(texts)
 

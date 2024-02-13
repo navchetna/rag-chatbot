@@ -93,3 +93,24 @@ def construct_chatbot_prompt_mistral(contexts: str, query: str):
         {contexts} [/INST]""" 
     return MISTRAL_CHATBOT_FINAL_PROMPT
 
+
+def construct_summary_prompt_mistral(title_of_document: str, input_table: str):
+    """Constructs the chatbot prompt from the given messages and and question"""
+
+    # context_str = get_context_string(contexts)
+    SUMMARY_FINAL_PROMPT = f"""<s>[INST] <<SYS>>\n You are a helpful, respectful and honest assistant. <</SYS>> 
+        [INST] You have been provided provided a table in Markdown format deliminated by triple backticks with the title of the table. Your task is to generate an abstract description of a table using all the critical values and ranges. Take hints and describe more about the table using the document title. 
+        First - Extract all the critical values and ranges from the table using the table headers in <td> tags. 
+        Second - Using the critical values, ranges and table of content; generate an abstract summary focussing on what are the critical values and ranges mentioned in the table and the significance of the table. 
+        Ensure that the summary contains all the information till the last value mentioned in the table along with additional information like what is the table all about. 
+        Generate the ENTIRE SUMMARY IN 400 WORDS ONLY WITHOUT ANY LOSS OF INFORMATION AND MINIMUM REPETITION. Refrain from return tables as output. 
+
+        Title of the document:
+        {title_of_document}
+
+        Table: 
+        ```{input_table}``` [/INST] 
+        """
+    return SUMMARY_FINAL_PROMPT
+
+
