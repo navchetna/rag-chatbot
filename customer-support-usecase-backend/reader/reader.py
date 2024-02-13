@@ -105,8 +105,8 @@ class PDFReader:
                         if df.to_markdown() not in self.tables_markdown:
                             self.tables_markdown.append(df.to_markdown())
 
-                    except: 
-                        print(f"Error parsing the PDF")
+                    except Exception as e: 
+                        print(f"Error parsing the PDF - {e}")
                     array_detail = []
         return self.table_title, self.tables_markdown
     

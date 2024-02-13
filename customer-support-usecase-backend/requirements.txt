@@ -9,3 +9,7 @@ fastapi
 pymongo
 python-multipart
 jpype1
+sentence-transformers
+pdfplumber 
+PyMUPDF
+tabulate 
