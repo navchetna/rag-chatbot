@@ -113,7 +113,7 @@ def ingestion_flow(file_path: str, context_id: str):
 
 # 
 
-    summary_of_tables = [llm.generate_summary_v3(toc[0][1], title+'\n'+table) for title, table in zip(table_titles, tables_markdown)]
+#    summary_of_tables = [llm.generate_summary_v3(toc[0][1], title+'\n'+table) for title, table in zip(table_titles, tables_markdown)]
 
 def storing_data(texts, summary_of_tables, context_id, table_data):
     """

@@ -12,4 +12,5 @@ jpype1
 sentence-transformers
 pdfplumber 
 PyMUPDF
-tabulate 
+tabulate
+numpy  
