@@ -13,4 +13,5 @@ sentence-transformers
 pdfplumber 
 PyMUPDF
 tabulate
-numpy  
+numpy
+einops  

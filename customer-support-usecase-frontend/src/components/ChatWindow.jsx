@@ -258,7 +258,7 @@ const ChatWindow = ({ updateMetrics, props }) => {
 
     const ssePayload = {
       inputs: data["prompt"],
-      parameters: {
+        parameters: {
         best_of: 1,
         details: true,
         do_sample: true,
@@ -266,10 +266,10 @@ const ChatWindow = ({ updateMetrics, props }) => {
         repetition_penalty: 1.03,
         return_full_text: false,
         seed: null,
-        temperature: 0.01,
-        top_k: 10,
-        top_n_tokens: 5,
-        top_p: 0.95,
+        temperature: 0.1,
+        top_k: null,
+        top_n_tokens: null,
+        top_p: null,
         truncate: null,
         typical_p: 0.95,
         watermark: true,
@@ -281,6 +281,7 @@ const ChatWindow = ({ updateMetrics, props }) => {
       },
       payload: JSON.stringify(ssePayload),
     });
+
     eventSource.addEventListener("message", function (event) {
       const data = JSON.parse(event.data); // Assuming data is in JSON format
       console.log("Received data:", data);
