@@ -26,6 +26,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
+import LLMMetrics from "./LLMMetrics";
 
 const chatWindowStyles = {
   root: {
@@ -190,6 +191,14 @@ const ChatWindow = ({ updateMetrics, props }) => {
     (data == undefined) | (data == null) | (currentContextId == null)
       ? []
       : [...data["messages"][currentContextId], ...newMessagesInCurrentContext];
+  const [ragTime, setRagTime] = useState(0);
+  const [firstTokenTime, setFirstTokenTime] = useState(0);
+  const [tokensPerSec, setTokensPerSec] = useState(0);
+  const [promptTokens, setPromptTokens] = useState(0);
+  const [totalTokens, setTotalTokens] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [totalTime, setTotalTime] = useState(0);
+  const [prompt, setPrompt] = useState("");
 
   useEffect(() => {
     // Fetch data when the component mounts
@@ -224,6 +233,13 @@ const ChatWindow = ({ updateMetrics, props }) => {
     // Scroll to bottom when component mounts or when newMessages change
     setTimeout(() => scrollToBottom(), 150);
   }, [newMessages, currentContextId]);
+  useEffect(() => {
+    console.log("eventSource firstTokenTime updated:", firstTokenTime);
+  }, [firstTokenTime]);
+
+  useEffect(() => {
+    console.log("eventSource totalTime updated:", totalTime);
+  }, [totalTime]);
   const handleMessageSend = async () => {
     if (!newMessage.trim()) return;
     const humanMessage = {
@@ -233,17 +249,23 @@ const ChatWindow = ({ updateMetrics, props }) => {
       feedback: 0,
       context_id: currentContextId,
     };
+    setRunning(true);
+    console.log("Running: ", running);
     setNewMessages([...newMessages, humanMessage]);
 
     //get the prompts
-
     const apiUrl = `${serverUrl}/prompts/chatbot?context_id=${currentContextId}&session_id=${sessionId}&query=${newMessage}`;
     console.log(apiUrl);
     const response = await fetch(apiUrl);
+    console.log("ragResponse: ", response);
     if (!response.ok) {
       console.log("not ok");
     }
     const data = await response.json();
+    console.log("ragResponse.json: ", data);
+    setRagTime(data.RAG_TIME);
+    setPromptTokens(data.num_tokens);
+    setPrompt(data.prompt);
 
     const sseUrl = `${import.meta.env.VITE_SSE_URL}/generate_stream`;
 
@@ -258,7 +280,7 @@ const ChatWindow = ({ updateMetrics, props }) => {
 
     const ssePayload = {
       inputs: data["prompt"],
-        parameters: {
+      parameters: {
         best_of: 1,
         details: true,
         do_sample: true,
@@ -281,9 +303,23 @@ const ChatWindow = ({ updateMetrics, props }) => {
       },
       payload: JSON.stringify(ssePayload),
     });
-
+    let start = Date.now();
+    let firstTokenEnd = 0;
+    let finalTokenEnd = 0;
     eventSource.addEventListener("message", function (event) {
       const data = JSON.parse(event.data); // Assuming data is in JSON format
+      if (data.token.text === " ") {
+        firstTokenEnd = Date.now();
+        const diff = firstTokenEnd - start;
+        setFirstTokenTime(diff);
+        console.log(
+          `eventSource message:
+          start: ${start}, 
+          firstTokenEnd: ${firstTokenEnd}, 
+          diff: ${diff}, 
+          firstTokenTime: ${firstTokenTime}`
+        );
+      }
       console.log("Received data:", data);
       if (
         data["details"] !== null &&
@@ -296,10 +332,27 @@ const ChatWindow = ({ updateMetrics, props }) => {
         aiMessage["content"] += data["token"]["text"];
         setNewMessages([...newMessages, humanMessage, aiMessage]);
       }
+      // const diff1 = Date.now() - firstTokenTime;
+      // setFirstTokenTime(diff1);
+      // console.log("Time taken to get the first token:", firstTokenTime, "ms");
     });
+    // setFirstTokenTime(Date.now() - firstTokenTime);
+    console.log("Outside eventSource message");
 
     eventSource.addEventListener("abort", function (event) {
       console.log("eventSource closed");
+      if (finalTokenEnd === 0) {
+        finalTokenEnd = Date.now();
+        const diff = finalTokenEnd - start;
+        if (diff < 1000000) setTotalTime(diff);
+        console.log(
+          `eventSource abort:
+          start: ${start}, 
+          finalTokenEnd: ${finalTokenEnd}, 
+          diff: ${diff}, 
+          totalTime: ${totalTime}`
+        );
+      }
       const postData = [humanMessage, aiMessage];
 
       const URL = `${serverUrl}/messages/`; // Replace with your API endpoint
@@ -331,6 +384,7 @@ const ChatWindow = ({ updateMetrics, props }) => {
           console.error("Error:", error);
         });
     });
+    console.log("Outside eventSource abort");
   };
 
   const handleMenuClick = (event) => {
@@ -384,10 +438,10 @@ const ChatWindow = ({ updateMetrics, props }) => {
     const allMessages = getAllMessages();
     setMessageCount(allMessages.length);
     setPositiveMessageCount(
-      allMessages.filter((message) => message.feedback === 1).length,
+      allMessages.filter((message) => message.feedback === 1).length
     );
     setNegativeMessageCount(
-      allMessages.filter((message) => message.feedback === -1).length,
+      allMessages.filter((message) => message.feedback === -1).length
     );
     // updateMetrics(
     //       allMessages.length,
@@ -405,7 +459,7 @@ const ChatWindow = ({ updateMetrics, props }) => {
   };
 
   const newMessagesInCurrentContext = newMessages.filter(
-    (obj) => obj.context_id === currentContextId,
+    (obj) => obj.context_id === currentContextId
   );
   const allMessages = getAllMessages();
 
@@ -417,10 +471,10 @@ const ChatWindow = ({ updateMetrics, props }) => {
     const allMessages = getAllMessages();
     setMessageCount(allMessages.length);
     setPositiveMessageCount(
-      allMessages.filter((message) => message.feedback === 1).length,
+      allMessages.filter((message) => message.feedback === 1).length
     );
     setNegativeMessageCount(
-      allMessages.filter((message) => message.feedback === -1).length,
+      allMessages.filter((message) => message.feedback === -1).length
     );
   }, [currentContextId, data, newMessages]);
 
@@ -462,6 +516,21 @@ const ChatWindow = ({ updateMetrics, props }) => {
           negativeMessageCount={negativeMessageCount}
         /> */}
       <Paper style={chatWindowStyles.root} elevation={5}>
+        <LLMMetrics
+          ragTime={ragTime}
+          firstTokenTime={firstTokenTime}
+          tokensPerSec={tokensPerSec}
+          setTokensPerSec={setTokensPerSec}
+          promptTokens={promptTokens}
+          totalTokens={totalTokens}
+          setTotalTokens={setTotalTokens}
+          totalTime={totalTime}
+          serverUrl={serverUrl}
+          prompt={prompt}
+        />
+        {/* const [firstTokenTime, setFirstTokenTime] = useState(0); const
+        [tokensPerSec, setTokensPerSec] = useState(0); const [promptTokens,
+        setpromptTokens] = useState(0); */}
         <Box
           ref={scrollContainerRef}
           style={chatWindowStyles.messagesContainer}
@@ -551,7 +620,7 @@ const ChatWindow = ({ updateMetrics, props }) => {
             style={chatWindowStyles.textField}
             value={newMessage}
             onChange={(e) => {
-              console.log(e.target.value);
+              // console.log(e.target.value);
               setNewMessage(e.target.value);
             }}
             handleMessageSend={handleMessageSend}
