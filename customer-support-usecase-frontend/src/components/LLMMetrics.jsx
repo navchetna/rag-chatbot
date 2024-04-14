@@ -6,32 +6,26 @@ import CloseIcon from "@mui/icons-material/Close";
 
 export default function LLMMetrics(props) {
   const [showMetrics, setShowMetrics] = useState(false);
+  const [outputTokens, setOutputTokens] = useState(0);
   const {
     ragTime,
     firstTokenTime,
-    tokensPerSec,
-    setTokensPerSec,
     promptTokens,
-    totalTokens,
-    setTotalTokens,
-    totalTime,
+    generateTokenTime,
     serverUrl,
-    prompt,
+    lastResponseContent,
   } = props;
 
   const getTotalTokens = async () => {
     try {
-      console.log("prompt: ", prompt);
-      const apiUrl = `${serverUrl}/count-tokens?sentence=${prompt}`;
+      const apiUrl = `${serverUrl}/count-tokens?sentence=${lastResponseContent}`;
       const response = await fetch(apiUrl);
-      console.log("getTotalTokens reponse: ", response);
       const data = await response.json();
-      console.log("getTotalTokens reponse.json: ", data);
+
       if (!response.ok) {
         console.log("not ok");
       }
-      setTotalTokens(data.num_tokens + promptTokens);
-      console.log("totalTokens: ", totalTokens);
+      setOutputTokens(data.num_tokens);
     } catch (error) {
       console.log("getTotalTokens error: ", error);
     }
@@ -39,14 +33,12 @@ export default function LLMMetrics(props) {
 
   useEffect(() => {
     // Execute getTotalTokens when the component mounts
-    if (prompt != "") getTotalTokens();
-  }, [ragTime]);
+    getTotalTokens();
+  }, [lastResponseContent]);
 
   const toggleMetrics = () => {
     setShowMetrics(!showMetrics);
   };
-
-  setTokensPerSec((totalTokens * 1000) / totalTime);
 
   return (
     <>
@@ -58,8 +50,9 @@ export default function LLMMetrics(props) {
             width: "2.4rem",
             position: "absolute",
             top: "5rem",
-            left: "16.3rem",
+            left: "1.2rem",
             boxShadow: "none",
+            zIndex: "0",
           }}
         >
           <AccessTimeIcon
@@ -75,7 +68,7 @@ export default function LLMMetrics(props) {
             sx={{
               position: "absolute",
               top: "5rem",
-              left: "3rem",
+              left: "1.2rem",
               backgroundColor: "#ffffff",
               borderRadius: "1rem",
               boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
@@ -96,11 +89,12 @@ export default function LLMMetrics(props) {
               }}
             >
               <Box>Time for RAG:</Box>
-              <Box>Time for 1st token:</Box>
-              <Box>Tokens/s:</Box>
               <Box>Prompt Tokens:</Box>
+              <Box>Time for 1st token:</Box>
+              <Box>Output Tokens:</Box>
+              <Box>Token Gen Time:</Box>
+              <Box>Tokens/s:</Box>
               <Box>Total Tokens:</Box>
-              <Box>Total Time:</Box>
             </Box>
             <Box
               sx={{
@@ -112,11 +106,16 @@ export default function LLMMetrics(props) {
               }}
             >
               <Box>{ragTime.toFixed(3)} s</Box>
-              <Box>{firstTokenTime} ms</Box>
-              <Box>{tokensPerSec.toFixed(2)}</Box>
               <Box>{promptTokens}</Box>
-              <Box>{totalTokens}</Box>
-              <Box>{totalTime / 1000} s</Box>
+              <Box>{firstTokenTime / 1000} s</Box>
+              <Box>{outputTokens == 1 ? 0 : outputTokens}</Box>
+              <Box>{generateTokenTime / 1000} s</Box>
+              <Box>
+                {generateTokenTime == 0
+                  ? 0
+                  : ((outputTokens * 1000) / generateTokenTime).toFixed(2)}
+              </Box>
+              <Box>{outputTokens + promptTokens}</Box>
             </Box>
           </Box>
           <Fab
@@ -125,15 +124,15 @@ export default function LLMMetrics(props) {
               height: "2rem",
               width: "2.4rem",
               position: "absolute",
-              top: "5.2rem",
-              left: "16.1rem",
+              top: "5.1rem",
+              left: "1.4rem",
               boxShadow: "none",
             }}
           >
             <CloseIcon
               sx={{
                 backgroundColor: "white",
-                position: "absolute",
+                position: "relative",
                 boxShadow: "none",
               }}
               onClick={toggleMetrics}
