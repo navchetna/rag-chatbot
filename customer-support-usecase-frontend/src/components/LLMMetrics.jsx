@@ -6,35 +6,34 @@ import CloseIcon from "@mui/icons-material/Close";
 
 export default function LLMMetrics(props) {
   const [showMetrics, setShowMetrics] = useState(false);
-  const [outputTokens, setOutputTokens] = useState(0);
   const {
     ragTime,
     firstTokenTime,
     promptTokens,
     generateTokenTime,
     serverUrl,
-    lastResponseContent,
+    outputTokens,
   } = props;
 
-  const getTotalTokens = async () => {
-    try {
-      const apiUrl = `${serverUrl}/count-tokens?sentence=${lastResponseContent}`;
-      const response = await fetch(apiUrl);
-      const data = await response.json();
+  // const getTotalTokens = async () => {
+  //   try {
+  //     const apiUrl = `${serverUrl}/count-tokens?sentence=${lastResponseContent}`;
+  //     const response = await fetch(apiUrl);
+  //     const data = await response.json();
 
-      if (!response.ok) {
-        console.log("not ok");
-      }
-      setOutputTokens(data.num_tokens);
-    } catch (error) {
-      console.log("getTotalTokens error: ", error);
-    }
-  };
+  //     if (!response.ok) {
+  //       console.log("not ok");
+  //     }
+  //     setOutputTokens(data.num_tokens);
+  //   } catch (error) {
+  //     console.log("getTotalTokens error: ", error);
+  //   }
+  // };
 
-  useEffect(() => {
-    // Execute getTotalTokens when the component mounts
-    getTotalTokens();
-  }, [lastResponseContent]);
+  // useEffect(() => {
+  //   // Execute getTotalTokens when the component mounts
+  //   getTotalTokens();
+  // }, [lastResponseContent]);
 
   const toggleMetrics = () => {
     setShowMetrics(!showMetrics);
@@ -108,7 +107,7 @@ export default function LLMMetrics(props) {
               <Box>{ragTime.toFixed(3)} s</Box>
               <Box>{promptTokens}</Box>
               <Box>{firstTokenTime / 1000} s</Box>
-              <Box>{outputTokens == 1 ? 0 : outputTokens}</Box>
+              <Box>{outputTokens}</Box>
               <Box>{generateTokenTime / 1000} s</Box>
               <Box>
                 {generateTokenTime == 0

@@ -196,7 +196,7 @@ const ChatWindow = ({ updateMetrics, props }) => {
   const [promptTokens, setPromptTokens] = useState(0);
   const [running, setRunning] = useState(false);
   const [generateTokenTime, setGenerateTokenTime] = useState(0);
-  const [lastResponseContent, setLastResponseContent] = useState("");
+  const [outputTokens, setOutputTokens] = useState(0);
 
   useEffect(() => {
     // Fetch data when the component mounts
@@ -280,6 +280,9 @@ const ChatWindow = ({ updateMetrics, props }) => {
         max_new_tokens: max_new_tokens,
         repetition_penalty: 1.03,
         return_full_text: false,
+        stop: [
+          "<|eot_id|>"
+        ],
         seed: null,
         temperature: 0.1,
         top_k: null,
@@ -314,6 +317,8 @@ const ChatWindow = ({ updateMetrics, props }) => {
         data["details"] !== undefined &&
         "finish_reason" in data["details"]
       ) {
+        setGenerateTokenTime(Date.now() - tokenGenerateTime);
+        setOutputTokens(data["details"]["generated_tokens"]);
         eventSource.close();
       } else {
         aiMessage["content"] += data["token"]["text"];
@@ -325,8 +330,6 @@ const ChatWindow = ({ updateMetrics, props }) => {
 
     eventSource.addEventListener("abort", function (event) {
       console.log("eventSource closed");
-      setGenerateTokenTime(Date.now() - tokenGenerateTime);
-      setLastResponseContent(aiMessage.content);
 
       const postData = [humanMessage, aiMessage];
 
@@ -478,7 +481,7 @@ const ChatWindow = ({ updateMetrics, props }) => {
           promptTokens={promptTokens}
           generateTokenTime={generateTokenTime}
           serverUrl={serverUrl}
-          lastResponseContent={lastResponseContent}
+          outputTokens={outputTokens}
         />
         <Box
           ref={scrollContainerRef}

@@ -50,7 +50,7 @@ from sentence_transformers import SentenceTransformer
 
 class STEmbedder:
     def __init__(self, model_name = "nomic-ai/nomic-embed-text-v1"):
-        self.model = SentenceTransformer(model_name, trust_remote_code=True)
+        self.model = SentenceTransformer(model_name, trust_remote_code=True, token="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")
 
     def embed_text(self, texts: List[str]): 
         embeddings = self.model.encode(texts)

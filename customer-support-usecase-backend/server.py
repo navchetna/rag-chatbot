@@ -11,8 +11,10 @@ from adapter.adapter import Adapter
 from embedder.embedder import Embedder
 from reader.reader import Reader
 from flows import ingestion_flow, storing_data
-from prompts import construct_chatbot_prompt, construct_chatbot_prompt_mistral, construct_conversation_summary_prompt, construct_summary_prompt_mistral
+from prompts import construct_chatbot_prompt, construct_chatbot_prompt_mistral, construct_conversation_summary_prompt, construct_summary_prompt_mistral, construct_chatbot_prompt_llama3
 from extras.database import session
+import time
+from utils import count_llama_tokens
 
 app = FastAPI()
 
@@ -495,6 +497,7 @@ def get_chatbot_prompt(context_id: str, session_id: str, query: str):
     vector_db = VectorDB(path = os.getenv("VECTOR_DB_LOCATION"), collection_name = context_id)
     embedder = STEmbedder()
     
+    start_time = time.time()
     query_embedding = embedder.embed_text(query)
     top_k = vector_db.query_embeddings(query_embedding)
     top_k_chunks = [point.payload['table'] if point.payload['type']=='table' else point.payload['text'] for point in top_k]
@@ -508,9 +511,13 @@ def get_chatbot_prompt(context_id: str, session_id: str, query: str):
                 {"context_id": context_id, "session_id": session_id}
             ).sort("sequence_number", 1)
         )
-
-        prompt_str = construct_chatbot_prompt_mistral(top_k_string, query)
-        prompt = {"prompt": prompt_str}
-        return prompt
+        
+        # prompt_str = construct_chatbot_prompt_mistral(top_k_string, query)
+        prompt_str = construct_chatbot_prompt_llama3(top_k_string, query)
+        end_time = time.time()
+        RAG_time = end_time-start_time
+        Number_of_tokens = count_llama_tokens(prompt_str)
+        response = {"prompt": prompt_str, "RAG_TIME" : RAG_time, "num_tokens": Number_of_tokens}
+        return response
     else:
         raise HTTPException(status_code=404, detail="session not found")

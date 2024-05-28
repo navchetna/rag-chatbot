@@ -93,8 +93,24 @@ def construct_chatbot_prompt_mistral(contexts: str, query: str):
         {contexts} [/INST]""" 
     return MISTRAL_CHATBOT_FINAL_PROMPT
 
+def construct_chatbot_prompt_llama3(contexts: str, query: str):
+    """Constructs the chatbot prompt from the given messages and and question"""
+
+    LLAMA3_CHATBOT_FINAL_PROMPT = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>\You are a helpful and respectiful assistant. Your task is to answer to the user query based on the context provided to you. <|eot_id|><|start_header_id|>user<|end_header_id|>
+
+        Given a question from a product technical guide. Understand the question and provide its answer from the given context. The context contains both tables and text. Each context is seperated by five hyphen (-----). Tables are provided to you in markdown format. Based on the query generate the most suitable answer for the given query. 
+        Take a deep breadth and think step by step before answering the question.
+        
+        
+        Question - {query} 
+
+        Context - 
+        {contexts}
+        <|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
+    return LLAMA3_CHATBOT_FINAL_PROMPT
 
 def construct_summary_prompt_mistral(title_of_document: str, input_table: str):
+
     """Constructs the chatbot prompt from the given messages and and question"""
 
     # context_str = get_context_string(contexts)

@@ -11,6 +11,10 @@ COPY requirements.txt /app/
 
 RUN pip install -r requirements.txt
 
+RUN pip install huggingface_hub
+
+RUN python -c "from huggingface_hub.hf_api import HfFolder; HfFolder.save_token('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')"
+
 COPY ./ /app/
 
 EXPOSE 8000
