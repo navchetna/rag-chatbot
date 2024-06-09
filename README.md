@@ -1,60 +1,17 @@
+## Steps to setup
 
-## Overview
-This is a chatbot application which allows you to ask questions against your documents. 
-
-## Design Specifications
-
-### Entities
-
-
-
-#### Document
-
-- **Attributes:**
-  - name : str
-
-#### Context
-
-- **Attributes:**
-  - id : str (Primary Key)
-  - title: str
-  - documents: list[str] 
-
-#### Message
-
-- **Attributes:**
-  - id: str (Primary Key)
-  - role : str ("human" | "ai" )
-  - content : str
-  - feeback: int (0 for none, 1 for positive, -1 for negative )
-  - session_id: str (The session under which the message was generated)
-  - context_id: str (The context against which the message was asked)
-  - sequence_number: int (To maintain the position of the message in the conversation) 
-
-#### Session 
-This entity acts as a state manager for the conversation. Under one session, an user can maintain multiple conversations, one conversation per context.
-- **Attributes:**
-  - id : str (Primary Key)
-  - context_id: str  (To maintain the current context ID of
-
-This entity might has less fields right now, but could be extended to include a variety of state information for the conversation. 
-
-
-### Relationships
-
-- **Session to Message:** One-to-Many relationship. One Session can have multiple messages associated with it.
-- **Context to Document:** One-to-Many relationship. One context can have multiple documents associated with it.
-
----
-
-## Deployment
-export the following variables 
-```bash
-$ export GIT_USERNAME=your_user_name
-$ export GIT_PAT=your_personal_access_token
-$ ./deploy.sh
-
+- Start the tgi-llama-3 server on Gaudi using the following command:
 ```
-## Resources 
-### Prompt Engineering for LLama2
-- https://huggingface.co/blog/llama2#how-to-prompt-llama-2
+docker run -d -p 8001:80 --name tgi-llama-3-8b --runtime=habana -e HF_TOKEN=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 -e HABANA_VISIBLE_DEVICES=7 -e OMPI_MCA_btl_vader_single_copy_mechanism=none -v <Your huggingface hug cache dir>:/data --cap-add=sys_nice --ipc=host akarx/tgi-gaudi --json-output --model-id meta-llama/Meta-Llama-3-8B-Instruct --max-input-length 128 --max-total-tokens 300 --max-batch-prefill-tokens 2048 --max-batch-total-tokens 2500 --hostname 0.0.0.0 
+```
+- Edit the docker-compose-prod.yaml file for the following values:
+    - In the backend service, change the first volumes path to where you want your data to persist. The second volume path will be the directory with your downloaded models.
+    - Change the environment variable "INFERENCE_URL" to point to the Gaudi server
+    - In the frontend service, change the VITE_BACKEND_URL to point to the backend service port. Change the VITE_SSE_URL to point to the Gaudo Server
+    - In the database service, change the volume mapping to point to the directory where you want your data to persist. 
+
+- Run the deployment with:
+  ```
+  chmod +x ./deploy.sh
+  ./deploy.sh docker-compose-prod.yaml
+  ```
