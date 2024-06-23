@@ -1,6 +1,6 @@
-torch 
+torch
 transformers 
-PyMuPDF 
+PyMuPDF
 tabula-py 
 qdrant-client 
 pyPDF2
