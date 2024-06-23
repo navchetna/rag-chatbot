@@ -18,7 +18,7 @@ from utils import count_llama_tokens
 
 app = FastAPI()
 
-origins = ["http://localhost:4001", "http://localhost:4002", "*"]
+origins = ["http://localhost:4001", "http://localhost:4002", "http://10.138.187.90:5001", "*"]
 
 app.add_middleware(
     CORSMiddleware,

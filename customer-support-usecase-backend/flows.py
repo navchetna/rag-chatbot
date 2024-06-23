@@ -109,7 +109,7 @@ def ingestion_flow(file_path: str, context_id: str):
 
 
 
-    return texts, toc[0][1], table_titles, table_data 
+    return texts, "", [], [] 
 
 # 
 
@@ -128,9 +128,9 @@ def storing_data(texts, summary_of_tables, context_id, table_data):
 
     embedder = STEmbedder()
     embedded_docs_texts = embedder.embed_text(texts)
-    embedded_docs_table = embedder.embed_text(summary_of_tables)
+    #embedded_docs_table = embedder.embed_text(summary_of_tables)
 
     vector_db = VectorDB(path = VECTOR_DB_LOCATION, collection_name = context_id, embedding_size = 768)
     vector_db.insert_docs_embeddings(embedded_docs_texts, texts)
-    metadata = [[table, summary_of_table] for table, summary_of_table in zip(table_data, summary_of_tables)]
-    vector_db.insert_table_embeddings(embedded_docs_table, metadata)
+    #metadata = [[table, summary_of_table] for table, summary_of_table in zip(table_data, summary_of_tables)]
+    #vector_db.insert_table_embeddings(embedded_docs_table, metadata)
