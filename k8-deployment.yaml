@@ -1,0 +1,248 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rag-chatbot
+---
+
+## Backend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: rag-chatbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: gar-registry.caas.intel.com/aice/RAG/backend
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: MONGO_URL
+          value: "mongodb://mongodb:27017/"
+        - name: INFERENCE_URL
+          value: "http://tgi-llama-3:8080"
+        - name: VECTOR_DB_LOCATION
+          value: "/vector_db/faiss_database"
+        - name: DATABASE_TYPE
+          value: "test"
+        - name: CHUNK_SIZE
+          value: "350"
+        - name: CHUNK_OVERLAP
+          value: "10"
+        - name: CHUNK_COUNT
+          value: "10"
+        - name: http_proxy
+          value: "http://proxy01.iind.intel.com:911/"
+        - name: https_proxy
+          value: "http://proxy01.iind.intel.com:912/"
+        - name: HTTP_PROXY
+          value: "http://proxy01.iind.intel.com:911/"
+        - name: HTTPS_PROXY
+          value: "http://proxy01.iind.intel.com:912/"
+        - name: no_proxy
+          value: "localhost,mongodb,127.0.0.1,tgi-llama-3"
+        - name: NO_PPROXY
+          value: "localhost,mongodb,127.0.0.1,tgi-llama-3"
+        volumeMounts:
+        - mountPath: /vector_db
+          name: vector-db-volume
+        - mountPath: /root/.cache/huggingface/
+          name: huggingface-cache-volume
+      volumes:
+      - name: vector-db-volume
+        hostPath:
+          path: /home/demo/customer_support_usecase/volumes/vector_db
+      - name: huggingface-cache-volume
+        hostPath:
+          path: /home/intel/.cache/huggingface/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: rag-chatbot
+spec:
+  type: NodePort
+  ports:
+  - port: 5002
+    targetPort: 8000
+    nodePort: 30010
+  selector:
+    app: backend
+---
+
+## Frontend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: rag-chatbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: gar-registry.caas.intel.com/aice/rag-chatbot/frontend
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5173
+        env:
+        - name: VITE_BACKEND_URL
+          value: "http://g2-r2-2.iind.intel.com:30010" # Assuming 'backend' is the service name for the backend
+        - name: VITE_SESSION_ID
+          value: "656f20b414828b118cef987b"
+        - name: VITE_SSE_URL
+          value: "http://g2-r2-2.iind.intel.com:30012"
+        - name: VITE_MAX_NEW_TOKENS
+          value: "300"
+        - name: http_proxy
+          value: "http://proxy01.iind.intel.com:911/"
+        - name: https_proxy
+          value: "http://proxy01.iind.intel.com:912/"
+        - name: HTTP_PROXY
+          value: "http://proxy01.iind.intel.com:911/"
+        - name: HTTPS_PROXY
+          value: "http://proxy01.iind.intel.com:912/"
+        - name: no_proxy
+          value: "localhost,database,127.0.0.1"
+        - name: NO_PPROXY
+          value: "localhost,database,127.0.0.1"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: rag-chatbot
+spec:
+  type: NodePort
+  ports:
+  - port: 5001
+    targetPort: 5173
+    nodePort: 30011
+  selector:
+    app: frontend
+---
+
+## TGI Llama-3-8B
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tgi-llama-3
+  namespace: rag-chatbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tgi-llama-3
+  template:
+    metadata:
+      labels:
+        app: tgi-llama-3
+    spec:
+      hostIPC: true
+      runtimeClassName: habana
+      containers:
+      - name: tgi-llama-3
+        image: gar-registry.caas.intel.com/aice/tgi-gaudi:1.17.0_a
+        imagePullPolicy: Always
+        command: ["text-generation-launcher", "--json-output", "--model-id", "meta-llama/Meta-Llama-3-8B-Instruct", "--disable-custom-kernels", "--max-input-tokens", "1024", "--max-total-tokens", "1600", "--trust-remote-code", "--max-batch-prefill-tokens", "17000", "--max-batch-total-tokens", "26000"]
+        env:
+        - name: http_proxy
+          value: "http://proxy01.iind.intel.com:911/"
+        - name: https_proxy
+          value: "http://proxy01.iind.intel.com:912/"
+        - name: no_proxy
+          value: "127.0.0.1,localhost"
+        - name: HUGGING_FACE_HUB_TOKEN
+          value: "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"
+        - name: OMPI_MCA_btl_vader_single_copy_mechanism
+          value: "none"
+        resources:
+          limits:
+            habana.ai/gaudi: 1
+          requests:
+            habana.ai/gaudi: 1
+        securityContext:
+          capabilities:
+            add: ["SYS_NICE"]
+        volumeMounts:
+        - mountPath: /data
+          name: cache-volume
+      volumes:
+      - name: cache-volume
+        hostPath:
+          path: "/home/intel/.cache/huggingface/hub"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tgi-llama-3
+  namespace: text2sql
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 80
+    nodePort: 30012
+  selector:
+    app: tgi-llama-3
+---
+
+## Mongo DB
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+  namespace: rag-chatbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - mountPath: /data/db
+          name: mongodb-data
+      volumes:
+      - name: mongodb-data
+        hostPath:
+          path: /home/demo/customer_support_usecase/volumes/mongodb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: rag-chatbot
+spec:
+  type: ClusterIP
+  ports:
+  - port: 27017
+    targetPort: 27017
+  selector:
+    app: mongodb
