@@ -56,7 +56,7 @@ spec:
         volumeMounts:
         - mountPath: /vector_db
           name: vector-db-volume
-        - mountPath: /root/.cache/huggingface/
+        - mountPath: /root/.cache/huggingface/hub
           name: huggingface-cache-volume
       volumes:
       - name: vector-db-volume
@@ -64,7 +64,7 @@ spec:
           path: /home/demo/customer_support_usecase/volumes/vector_db
       - name: huggingface-cache-volume
         hostPath:
-          path: /home/intel/.cache/huggingface/
+          path: /home/intel/.cache/huggingface/hub
 ---
 apiVersion: v1
 kind: Service
@@ -109,7 +109,7 @@ spec:
         - name: VITE_SESSION_ID
           value: "656f20b414828b118cef987b"
         - name: VITE_SSE_URL
-          value: "http://g2-r2-2.iind.intel.com:30012"
+          value: "http://g2-r2-2.iind.intel.com:30013"
         - name: VITE_MAX_NEW_TOKENS
           value: "300"
         - name: http_proxy
@@ -162,7 +162,7 @@ spec:
       - name: tgi-llama-3
         image: gar-registry.caas.intel.com/aice/tgi-gaudi:1.17.0_a
         imagePullPolicy: Always
-        command: ["text-generation-launcher", "--json-output", "--model-id", "meta-llama/Meta-Llama-3-8B-Instruct", "--disable-custom-kernels", "--max-input-tokens", "1024", "--max-total-tokens", "1600", "--trust-remote-code", "--max-batch-prefill-tokens", "17000", "--max-batch-total-tokens", "26000"]
+        command: ["text-generation-launcher", "--json-output", "--model-id", "meta-llama/Meta-Llama-3-8B-Instruct", "--disable-custom-kernels", "--max-input-tokens", "1800", "--max-total-tokens", "2400", "--trust-remote-code", "--max-batch-prefill-tokens", "17000", "--max-batch-total-tokens", "26000"]
         env:
         - name: http_proxy
           value: "http://proxy01.iind.intel.com:911/"
