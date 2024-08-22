@@ -195,15 +195,36 @@ kind: Service
 metadata:
   name: tgi-llama-3
   namespace: rag-chatbot
+  labels:
+    app: rag-chatbot
+    serving: tgi
 spec:
   type: NodePort
   ports:
   - port: 8080
     targetPort: 80
     nodePort: 30013
+    name: http
   selector:
     app: tgi-llama-3
 ---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: rag-chatbot
+    serving: tgi
+  name: tgi-llama-3-metrics
+  namespace: rag-chatbot
+spec:
+  endpoints:
+  - port: http
+    scheme: http
+  selector:
+    matchLabels:
+      app: rag-chatbot
+      serving: tgi
+---      
 
 ## Mongo DB
 apiVersion: apps/v1
