@@ -61,7 +61,7 @@ spec:
       volumes:
       - name: vector-db-volume
         hostPath:
-          path: /home/demo/customer_support_usecase/volumes/vector_db
+          path: /home/intel/rag-chatbot/volumes/vector_db
       - name: huggingface-cache-volume
         hostPath:
           path: /home/intel/.cache/huggingface/hub
@@ -105,11 +105,11 @@ spec:
         - containerPort: 5173
         env:
         - name: VITE_BACKEND_URL
-          value: "http://g2-r2-2.iind.intel.com:30010" # Assuming 'backend' is the service name for the backend
+          value: "http://10.138.190.72:30010" # Assuming 'backend' is the service name for the backend
         - name: VITE_SESSION_ID
           value: "656f20b414828b118cef987b"
         - name: VITE_SSE_URL
-          value: "http://g2-r2-2.iind.intel.com:30013"
+          value: "http://10.138.190.72:30013"
         - name: VITE_MAX_NEW_TOKENS
           value: "300"
         - name: http_proxy
@@ -160,7 +160,7 @@ spec:
       runtimeClassName: habana
       containers:
       - name: tgi-llama-3
-        image: gar-registry.caas.intel.com/aice/tgi-gaudi:1.17.0_a
+        image: ghcr.io/huggingface/tgi-gaudi:2.0.5
         imagePullPolicy: Always
         command: ["text-generation-launcher", "--json-output", "--model-id", "meta-llama/Meta-Llama-3-8B-Instruct", "--disable-custom-kernels", "--max-input-tokens", "1800", "--max-total-tokens", "2400", "--trust-remote-code", "--max-batch-prefill-tokens", "17000", "--max-batch-total-tokens", "26000"]
         env:
@@ -253,7 +253,7 @@ spec:
       volumes:
       - name: mongodb-data
         hostPath:
-          path: /home/demo/customer_support_usecase/volumes/mongodb
+          path: /home/intel/rag-chatbot/volumes/mongodb
 ---
 apiVersion: v1
 kind: Service
